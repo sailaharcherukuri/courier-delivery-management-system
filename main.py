@@ -174,3 +174,21 @@ class CourierApp:
         self.save()
         print("Agent assigned.")
 
+    @staticmethod
+    def status(shipment, new_status, note):
+        shipment["status"] = new_status
+        shipment["history"].append({"status": new_status, "time": stamp(), "note": note})
+
+    def update_status(self):
+        shipment = self.data["shipments"].get(ask("Tracking ID: "))
+        if not shipment:
+            raise ValueError("Shipment not found.")
+        current = shipment["status"]
+        print("Allowed next status:", ", ".join(NEXT[current]) or "none")
+        new = ask("New status: ").upper()
+        if new not in NEXT[current]:
+            raise ValueError("That status change is not allowed.")
+        self.status(shipment, new, input("Note (optional): ").strip() or new)
+        self.save()
+        print("Status updated.")
+
