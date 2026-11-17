@@ -221,3 +221,41 @@ class CourierApp:
         if not found:
             print("No matching shipments.")
 
+    def run(self):
+        actions = {
+            "1": ("Add customer", lambda: self.add_person("customers")),
+            "2": ("List customers", lambda: self.listing("customers")),
+            "3": ("Register package", self.add_package),
+            "4": ("List packages", lambda: self.listing("packages")),
+            "5": ("Add agent", lambda: self.add_person("agents")),
+            "6": ("List agents", lambda: self.listing("agents")),
+            "7": ("Create shipment", self.create_shipment), "8": ("Assign agent", self.assign),
+            "9": ("Update status", self.update_status), "10": ("Track shipment", self.track),
+            "11": ("Delivery history", self.history),
+        }
+        while True:
+            print("\n=== Courier Manager ===")
+            for number, (label, _) in actions.items():
+                print(f"{number}. {label}")
+            print("0. Exit")
+            choice = input("Choose: ").strip()
+            if choice == "0":
+                return
+            if choice not in actions:
+                print("Choose a listed number.")
+                continue
+            if self.read_only and choice in {"1", "3", "5", "7", "8", "9"}:
+                print("Changes disabled until data is repaired.")
+                continue
+            try:
+                actions[choice][1]()
+            except (ValueError, OSError) as error:
+                print("Error:", error)
+
+
+if __name__ == "__main__":
+
+    try:
+        CourierApp().run()
+    except OSError as error:
+        print("Could not open data folder:", error)
