@@ -91,3 +91,14 @@ class CourierApp:
             temp.write_text(json.dumps(self.data[key], indent=2), encoding="utf-8")
             temp.replace(path)
 
+    def add_person(self, kind):
+        records = self.data[kind]
+        key = ask(f"{kind[:-1].title()} ID: ")
+        if key in records:
+            raise ValueError("That ID already exists.")
+        person = [key, ask("Name: "), ask("Phone: ")]
+        record = Customer(*person, ask("Address: ")) if kind == "customers" else Agent(*person)
+        records[key] = asdict(record)
+        self.save()
+        print("Saved.")
+
