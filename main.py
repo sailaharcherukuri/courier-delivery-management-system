@@ -65,3 +65,29 @@ def stamp():
     return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
+class CourierApp:
+    def __init__(self):
+        FOLDER.mkdir(exist_ok=True)
+        self.data, self.read_only = {key: {} for key in FILES}, False
+        for key, filename in FILES.items():
+            path = FOLDER / filename
+            try:
+                if not path.exists():
+                    path.write_text("{}\n", encoding="utf-8")
+                value = json.loads(path.read_text(encoding="utf-8") or "{}")
+                if not isinstance(value, dict):
+                    raise ValueError("expected a JSON object")
+                self.data[key] = value
+            except (OSError, ValueError) as error:
+                print(f"Cannot read {filename}: {error}. File preserved; app is read-only.")
+                self.read_only = True
+
+    def save(self):
+        if self.read_only:
+            raise ValueError("Repair the malformed data file before changing records.")
+        for key, filename in FILES.items():
+            path = FOLDER / filename
+            temp = path.with_suffix(".tmp")
+            temp.write_text(json.dumps(self.data[key], indent=2), encoding="utf-8")
+            temp.replace(path)
+
