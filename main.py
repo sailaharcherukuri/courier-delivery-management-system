@@ -192,3 +192,16 @@ class CourierApp:
         self.save()
         print("Status updated.")
 
+    def track(self):
+        key = ask("Tracking ID: ")
+        s = self.data["shipments"].get(key)
+        if not s:
+            raise ValueError("Shipment not found.")
+        c, p = self.data["customers"].get(s["customer_id"], {}), self.data["packages"].get(s["package_id"], {})
+        a = self.data["agents"].get(s["agent_id"], {})
+        print(f"{key} | {s['status']} | Customer: {c.get('name', '?')} | Recipient: {s['recipient']}")
+        print(f"Address: {s['address']} | Package: {p.get('description', '?')} ({p.get('weight', '?')} kg)")
+        print(f"Charge: {s['charge']:.2f} | Expected: {s['expected']} | Agent: {a.get('name', 'Not assigned')}")
+        for h in s["history"]:
+            print(f"  {h['time']} - {h['status']}: {h['note']}")
+
