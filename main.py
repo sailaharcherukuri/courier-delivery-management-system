@@ -205,3 +205,19 @@ class CourierApp:
         for h in s["history"]:
             print(f"  {h['time']} - {h['status']}: {h['note']}")
 
+    def history(self):
+        choice = input("1 all, 2 customer, 3 status, 4 agent: ").strip()
+        fields = {"1": None, "2": "customer_id", "3": "status", "4": "agent_id"}
+        if choice not in fields:
+            raise ValueError("Choose 1, 2, 3, or 4.")
+        field = fields[choice]
+        value = input("Filter value: ").strip().upper() if field else ""
+        found = False
+        for key, s in self.data["shipments"].items():
+            if field and str(s[field]).upper() != value:
+                continue
+            print(f"{key} | {s['status']} | {s['expected']}")
+            found = True
+        if not found:
+            print("No matching shipments.")
+
