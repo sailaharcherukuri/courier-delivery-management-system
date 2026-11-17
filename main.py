@@ -131,3 +131,30 @@ class CourierApp:
                            for s in self.data["shipments"].values())
                 print(f"{key}: {item['name']} | {item['phone']} | {'Busy' if busy else 'Available'}")
 
+    def create_shipment(self):
+        if not self.data["customers"] or not self.data["packages"]:
+            raise ValueError("Add a customer and package first.")
+        self.listing("customers")
+        customer = ask("Customer ID: ")
+        self.listing("packages")
+        package = ask("Package ID: ")
+        if customer not in self.data["customers"] or package not in self.data["packages"]:
+            raise ValueError("Customer or package not found.")
+        recipient, address = ask("Recipient: "), ask("Delivery address: ")
+        expected = ask("Expected delivery (YYYY-MM-DD): ")
+        try:
+            date.fromisoformat(expected)
+        except ValueError as error:
+            raise ValueError("Use a real date in YYYY-MM-DD format.") from error
+        weight = self.data["packages"][package]["weight"]
+        charge = round(50 + 20 * weight, 2)
+        print(f"Sample charge: 50 + 20 x {weight} kg = {charge:.2f} units.")
+        if input("Create shipment? (y/n): ").strip().lower() != "y":
+            return
+        key = "TRK-" + uuid.uuid4().hex[:8].upper()
+        item = Shipment(key, customer, package, recipient, address, expected, charge, history=[])
+        item.history.append({"status": "CREATED", "time": stamp(), "note": "Shipment created"})
+        self.data["shipments"][key] = asdict(item)
+        self.save()
+        print("Tracking ID:", key)
+
