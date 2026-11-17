@@ -158,3 +158,19 @@ class CourierApp:
         self.save()
         print("Tracking ID:", key)
 
+    def assign(self):
+        key = ask("Tracking ID: ")
+        shipment = self.data["shipments"].get(key)
+        if not shipment or shipment["status"] in ("DELIVERED", "CANCELLED") or shipment["agent_id"]:
+            raise ValueError("Shipment not found or cannot be assigned.")
+        self.listing("agents")
+        agent = ask("Agent ID: ")
+        busy = any(s["agent_id"] == agent and s["status"] not in ("DELIVERED", "CANCELLED")
+                   for s in self.data["shipments"].values())
+        if agent not in self.data["agents"] or busy:
+            raise ValueError("Agent not found or already assigned.")
+        shipment["agent_id"] = agent
+        self.status(shipment, "ASSIGNED", "Agent assigned")
+        self.save()
+        print("Agent assigned.")
+
