@@ -102,3 +102,32 @@ class CourierApp:
         self.save()
         print("Saved.")
 
+    def add_package(self):
+        key = ask("Package ID: ")
+        if key in self.data["packages"]:
+            raise ValueError("That ID already exists.")
+        try:
+            weight = float(ask("Weight in kg: "))
+            if weight <= 0:
+                raise ValueError
+        except ValueError as error:
+            raise ValueError("Weight must be a positive number.") from error
+        item = Package(key, ask("Description: "), weight, ask("Type/size: "))
+        self.data["packages"][key] = asdict(item)
+        self.save()
+        print("Package saved.")
+
+    def listing(self, kind):
+        records = self.data[kind]
+        if not records:
+            print("No records found.")
+        for key, item in records.items():
+            if kind == "customers":
+                print(f"{key}: {item['name']} | {item['phone']} | {item['address']}")
+            elif kind == "packages":
+                print(f"{key}: {item['description']} | {item['weight']} kg | {item['kind']}")
+            else:
+                busy = any(s["agent_id"] == key and s["status"] not in ("DELIVERED", "CANCELLED")
+                           for s in self.data["shipments"].values())
+                print(f"{key}: {item['name']} | {item['phone']} | {'Busy' if busy else 'Available'}")
+
