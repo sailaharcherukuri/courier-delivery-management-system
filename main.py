@@ -254,7 +254,6 @@ class CourierApp:
 
 
 if __name__ == "__main__":
-
     try:
         CourierApp().run()
     except OSError as error:
