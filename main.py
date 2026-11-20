@@ -168,11 +168,15 @@ class CourierApp:
         for record_id, shipment in data["shipments"].items():
             if not isinstance(shipment, dict) or "status" not in shipment:
                 continue
-            if shipment.get("customer_id") not in data["customers"]:
-                invalid("shipments", record_id, "customer does not exist")
-            if shipment.get("package_id") not in data["packages"]:
-                invalid("shipments", record_id, "package does not exist")
+            customer_id = shipment.get("customer_id")
+            package_id = shipment.get("package_id")
             agent_id = shipment.get("agent_id", "")
+            if not all(isinstance(value, str) for value in (customer_id, package_id, agent_id)):
+                continue
+            if customer_id not in data["customers"]:
+                invalid("shipments", record_id, "customer does not exist")
+            if package_id not in data["packages"]:
+                invalid("shipments", record_id, "package does not exist")
             if agent_id and agent_id not in data["agents"]:
                 invalid("shipments", record_id, "assigned agent does not exist")
             if shipment.get("status") in {"ASSIGNED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"} and not agent_id:
