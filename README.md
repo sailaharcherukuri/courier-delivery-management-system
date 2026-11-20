@@ -6,6 +6,7 @@ A beginner-friendly Python console application for managing customers, packages,
 
 - The sample classroom shipping rate is **50 currency units + 20 currency units per kilogram**. The amount is rounded to two decimals and is not a real courier quote.
 - Expected delivery dates use `YYYY-MM-DD`.
+- Package weights must be finite numbers greater than zero. The resulting shipping charge must also be finite.
 - Status flow: `CREATED` can become `ASSIGNED` through agent assignment or `CANCELLED`; `ASSIGNED` can become `IN_TRANSIT` or `CANCELLED`; `IN_TRANSIT` can become `OUT_FOR_DELIVERY` or `CANCELLED`; `OUT_FOR_DELIVERY` can become `DELIVERED` or `CANCELLED`. Delivered and cancelled shipments are terminal.
 - An agent is occupied while assigned to a shipment that is not delivered or cancelled. The application recalculates availability from shipment records at startup.
 - Record IDs are unique within their own category. Tracking IDs are generated automatically.
@@ -23,7 +24,9 @@ Courier and Delivery Management System/
     └── shipments.txt
 ```
 
-Each `.txt` data file contains a human-readable JSON object keyed by record ID. This safely stores commas, line breaks, and other characters in addresses and names. If a file is missing, it is initialized as an empty object. If a file contains invalid JSON, the app preserves it and opens in read-only mode until the file is repaired; it will not overwrite that file.
+Each `.txt` data file contains a human-readable JSON object keyed by record ID. This safely stores commas, line breaks, and other characters in addresses and names. If a file is missing, it is initialized as an empty object. On startup, the app checks record fields, finite weights and charges, dates, status history, and shipment references. If JSON or a record is invalid, it reports the file and record ID, preserves the file, and disables menu operations until the data is repaired. It does not enter listing or tracking actions against invalid data.
+
+Each change saves only its affected collection. The app writes the updated JSON to a temporary file and replaces the original after the write succeeds. If saving fails, the in-memory record and its history are restored.
 
 ## Requirements and run instructions
 
@@ -69,6 +72,7 @@ Changes are written as actions complete. Restarting the program loads the same r
 - Add a customer, package, and agent; confirm they appear in their list views.
 - Try a duplicate customer/package/agent ID; the app should reject it.
 - Enter zero, a negative value, or nonnumeric text for weight; the app should reject it.
+- Enter `nan` or `inf` for weight; the app should reject them. A 2 kg package should produce a 90.00 unit shipment charge.
 - Enter an invalid calendar date or a date in a different format; shipment creation should reject it.
 - Create a shipment and confirm the sample charge and generated tracking ID.
 - Assign an agent; try assigning that same agent to another active shipment and confirm it is rejected.
@@ -76,3 +80,5 @@ Changes are written as actions complete. Restarting the program loads the same r
 - Track an unknown ID and confirm a clear error message.
 - Exit and restart; verify records and shipment status history remain available.
 - For a malformed-file recovery check, make a backup before editing a `.txt` data file into invalid JSON. Restart and confirm the file is preserved and changes are disabled until it is repaired.
+- In a copied data folder, remove a required customer field and restart. Confirm the app names the invalid file and record ID, does not overwrite the file, and blocks listing/tracking actions.
+- Simulate a save error while assigning an agent. Confirm the shipment status, history, and agent ID roll back in memory and on disk; retry after removing the simulated error.
